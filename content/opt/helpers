@@ -1,0 +1,46 @@
+#!/bin/bash
+
+set -eo pipefail
+
+# If specified value is true, return valid
+# Else return invalid
+#
+# Allows concatenation via && and ||
+evaluate_boolean() {
+	if [ "${1}" == "True" ] || [ "${1}" == "true" ] || [ "${1}" == "1" ]; then
+		return 0
+	else
+		return 1
+	fi
+}
+
+if evaluate_boolean "${ICINGA2_DOCKER_DEBUG}"; then
+	set -x
+fi
+
+# Test a server, if the server is available
+pgsql_ping() {
+	local host="${1}" port="${2}" user="${3}@"
+	echo "Pinging ${host}:${port}"
+	pg_isready -q -d "postgresql://${user}${host}:${port}"
+}
+
+# Wait until a PGSQL server becomes available
+# Does not check, if the connection credentials are correct
+pgsql_wait() {
+	until pgsql_ping "${1}" "${2}" "${3}"; do
+	sleep 1
+	done
+}
+
+# Connection data
+pgsql_conn() {
+	local host="${1}" port="${2}" user="${3}" password="${4}" database="${5}"
+	psql -q "postgresql://${user}:${password}@${host}:${port}/${database}"
+}
+
+# Test credentials
+pgsql_cred() {
+	local host="${1}" port="${2}" user="${3}" password="${4}" database="${5}"
+	psql -q -d "postgresql://${user}:${password}@${host}:${port}/${database}" -c "SELECT now()"
+}

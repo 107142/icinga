@@ -1,0 +1,10 @@
+#!/bin/bash
+
+. /opt/helpers
+
+if [ -f /opt/custom_run ]; then
+	chmod u+x /opt/custom_run || true
+	echo "Custom run: File mounted - executing /opt/custom_run"
+	/opt/custom_run
+	echo -e "Custom run: Finished\n"
+fi

@@ -1,0 +1,46 @@
+#!/bin/bash
+
+. /opt/helpers
+
+ICINGA2_FEATURE_GRAPHITE=${ICINGA2_FEATURE_GRAPHITE:-false}
+
+# Graphite writer
+if evaluate_boolean "${ICINGA2_FEATURE_GRAPHITE}"; then
+	ICINGA2_FEATURE_GRAPHITE_HOST=${ICINGA2_FEATURE_GRAPHITE_HOST:-graphite}
+	ICINGA2_FEATURE_GRAPHITE_PORT=${ICINGA2_FEATURE_GRAPHITE_PORT:-2003}
+	ICINGA2_FEATURE_GRAPHITE_SEND_THRESHOLDS=${ICINGA2_FEATURE_GRAPHITE_SEND_THRESHOLDS:-true}
+	ICINGA2_FEATURE_GRAPHITE_SEND_METADATA=${ICINGA2_FEATURE_GRAPHITE_SEND_METADATA:-false}
+
+	echo "Graphite: Enabling Icinga2 graphite writer"
+
+	icinga2 feature enable graphite --log-level critical
+
+	cat >/etc/icinga2/features-available/graphite.conf <<-END
+	/**
+	 * The GraphiteWriter type writes check result metrics and
+	 * performance data to a graphite tcp socket.
+	 */
+	library "perfdata"
+	object GraphiteWriter "graphite" {
+	  host = "$ICINGA2_FEATURE_GRAPHITE_HOST"
+	  port = "$ICINGA2_FEATURE_GRAPHITE_PORT"
+	  enable_send_thresholds = $ICINGA2_FEATURE_GRAPHITE_SEND_THRESHOLDS
+	  enable_send_metadata = $ICINGA2_FEATURE_GRAPHITE_SEND_METADATA
+	}
+	END
+
+cat <<-END
+
+===================================================================
+$(
+if evaluate_boolean "${ICINGA2_FEATURE_GRAPHITE}"; then
+	echo -e "Graphite: Writer enabled and sending data to carbon agent at: ${ICINGA2_FEATURE_GRAPHITE_HOST}:${ICINGA2_FEATURE_GRAPHITE_PORT}\n"
+fi
+)
+===================================================================
+END
+
+else
+	# Actively disable graphite, to not hit any weird bugs
+	icinga2 feature disable graphite --log-level critical || true
+fi

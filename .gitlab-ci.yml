@@ -1,0 +1,33 @@
+---
+
+image:
+  name: 'gcr.io/kaniko-project/executor:debug'
+  entrypoint: [ "" ]
+
+before_script:
+  - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+
+build-stable:
+  stage: build
+  script:
+    - /kaniko/executor --cache=true --cache-copy-layers --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --build-arg NAME=$CI_PROJECT_NAME --build-arg BUILD_DATE=`date -u +"%d-%m-%Y-T%H:%M:%S%Z"` --build-arg VCS_REF=$CI_COMMIT_SHORT_SHA --build-arg VCS_URL=$CI_PROJECT_URL --destination $CI_REGISTRY_IMAGE:stable --destination $CI_REGISTRY_IMAGE:2 --destination $CI_REGISTRY_IMAGE:2.13 --destination $CI_REGISTRY_IMAGE:2.13.1
+  only:
+    - stable
+
+build-master:
+  stage: build
+  script:
+    - /kaniko/executor --cache=true --cache-copy-layers --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --build-arg NAME=$CI_PROJECT_NAME --build-arg BUILD_DATE=`date -u +"%d-%m-%Y-T%H:%M:%S%Z"` --build-arg VCS_REF=$CI_COMMIT_SHORT_SHA  --build-arg VCS_URL=$CI_PROJECT_URL --destination $CI_REGISTRY_IMAGE:latest
+  only:
+    - master
+
+build-devel:
+  stage: build
+  script:
+    - /kaniko/executor --cache=true --cache-copy-layers --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --build-arg NAME=$CI_PROJECT_NAME --build-arg BUILD_DATE=`date -u +"%d-%m-%Y-T%H:%M:%S%Z"` --build-arg VCS_REF=$CI_COMMIT_SHORT_SHA  --build-arg VCS_URL=$CI_PROJECT_URL --destination $CI_REGISTRY_IMAGE:devel
+  when: manual
+  except:
+    - master
+    - stable
+
+...

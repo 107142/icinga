@@ -1,0 +1,6 @@
+#!/bin/bash
+
+. /opt/helpers
+
+update-ca-certificates --fresh >/dev/null 2>&1
+echo -e "Certificates: Updated CA\n"

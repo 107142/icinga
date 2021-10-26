@@ -1,0 +1,49 @@
+#!/bin/bash
+
+. /opt/helpers
+
+if evaluate_boolean "${ICINGA2_DOCKER_DEBUG}"; then
+	set -x
+fi
+
+ISSET_ICINGA2_API_TRANSPORT_PASS=${ICINGA2_API_TRANSPORT_PASS:+<set via env variable>}
+ISSET_DEFAULT_PGSQL_PASS=${DEFAULT_PGSQL_PASS:+<set via env variable>}
+
+export ICINGA2_FEATURE_DIRECTOR_USER=${ICINGA2_FEATURE_DIRECTOR_USER:-icinga2-director}
+export ICINGA2_FEATURE_DIRECTOR_PASS=${ICINGA2_FEATURE_DIRECTOR_PASS:-$(pwgen -s 64 1)}
+export ICINGA2_SATELLITE=${ICINGA2_SATELLITE:-false}
+
+export ICINGA2_API_TRANSPORT=${ICINGA2_API_TRANSPORT:-True}
+export ICINGA2_API_TRANSPORT_USER=${ICINGA2_API_TRANSPORT_USER:-"icinga2-transport"}
+export ICINGA2_API_TRANSPORT_PASS=${ICINGA2_API_TRANSPORT_PASS:-"icingatransport"}
+
+export DEFAULT_PGSQL_HOST=${DEFAULT_PGSQL_HOST:-pgsql}
+export DEFAULT_PGSQL_PORT=${DEFAULT_PGSQL_PORT:-5432}
+export DEFAULT_PGSQL_USER=${DEFAULT_PGSQL_USER:-icinga2}
+export DEFAULT_PGSQL_PASS=${DEFAULT_PGSQL_PASS:-$(pwgen -s 64 1)}
+
+export PGSQL_ROOT_USER=${PGSQL_ROOT_USER:-postgres}
+export PGSQL_ROOT_PASS=${PGSQL_ROOT_PASS:-${PGSQL_ROOT_PASSWORD}}
+
+echo -e "INITIALIZING ICINGA DOCKER CONTAINER\n"
+
+run-parts --lsbsysinit --exit-on-error -- /opt/setup
+icinga2 daemon --validate --log-level warning
+
+cat <<-END
+===================================================================
+
+Running Icinga on $(hostname)
+
+$(
+if evaluate_boolean "${ICINGA2_API_TRANSPORT}"; then
+	echo "Icinga2 transport endpoint credentials: ${ICINGA2_API_TRANSPORT_USER}:${ISSET_ICINGA2_API_TRANSPORT_PASS:-$ICINGA2_API_TRANSPORT_PASS}"
+fi
+)
+PostgreSQL default credentials: ${DEFAULT_PGSQL_USER}:${ISSET_DEFAULT_PGSQL_PASS:-$DEFAULT_PGSQL_PASS}
+
+===================================================================
+
+END
+
+exec "$@"

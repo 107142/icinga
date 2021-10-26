@@ -1,0 +1,162 @@
+#!/bin/bash
+
+. /opt/helpers
+
+ICINGA2_IDO_PGSQL_HOST=${ICINGA2_IDO_PGSQL_HOST:-${DEFAULT_PGSQL_HOST}}
+ICINGA2_IDO_PGSQL_PORT=${ICINGA2_IDO_PGSQL_PORT:-${DEFAULT_PGSQL_PORT}}
+ICINGA2_IDO_PGSQL_USER=${ICINGA2_IDO_PGSQL_USER:-${DEFAULT_PGSQL_USER}}
+ICINGA2_IDO_PGSQL_PASS=${ICINGA2_IDO_PGSQL_PASS:-${IDO_PASSWORD:-${DEFAULT_PGSQL_PASS}}}
+ICINGA2_IDO_PGSQL_DATA=${ICINGA2_IDO_PGSQL_DATA:-icinga2_ido}
+ICINGA2_IDO_PGSQL_SSL_MODE=${ICINGA2_IDO_PGSQL_SSL_MODE:-disable}
+ICINGA2_IDO_PGSQL_SSL_KEY=${ICINGA2_IDO_PGSQL_SSL_KEY}
+ICINGA2_IDO_PGSQL_SSL_CERT=${ICINGA2_IDO_PGSQL_SSL_CERT}
+ICINGA2_IDO_PGSQL_SSL_CA=${ICINGA2_IDO_PGSQL_SSL_CA:-/etc/ssl/certs/ca-certificates.crt}
+
+echo "Icinga2: Checking if database is available ..."
+pgsql_wait \
+	"${ICINGA2_IDO_PGSQL_HOST}" \
+	"${ICINGA2_IDO_PGSQL_PORT}" \
+	"${PGSQL_ROOT_USER}"
+echo "Icinga2: Database is accepting connections"
+
+if [ ! "$(ls -A /etc/icinga2)" ]; then
+	echo "Icinga2: Copying fresh config-files for /etc/icinga2"
+	cp -Ra /etc/icinga2.dist/* /etc/icinga2/
+	cp -Ra /var/lib/icinga2.dist/* /var/lib/icinga2/
+	rm -f /etc/icinga2/conf.d/api-users.conf
+else
+	[ -e /etc/icinga2.dist ] && rm -rf /etc/icinga2.dist
+	[ -e /var/lib/icinga2.dist ] && rm -rf /var/lib/icinga2.dist
+fi
+
+echo "Icinga2: Creating directories and setting permissions"
+
+# Chown directories and files that might be coming from volumes
+# continue on errors as files might mounted read-only
+chown -R nagios:nagios /var/lib/icinga2 || true
+chown -R nagios:nagios /var/spool/icinga2 || true
+chown -R nagios:nagios /var/cache/icinga2 || true
+chown -R nagios:nagios /etc/icinga2 || true
+
+if [ ! -e '/var/run/icinga2' ]; then
+	mkdir -p /var/run/icinga2/cmd
+	chown -R nagios:nagios /var/run/icinga2
+	chmod 0755 /var/run/icinga2
+fi
+
+# Create PGSQL database
+if [ -n "${PGSQL_ROOT_PASS:-}" ]; then
+	echo "Icinga2: Creating database and user role"
+	psql -q "postgresql://${PGSQL_ROOT_USER}:${PGSQL_ROOT_PASS}@${ICINGA2_IDO_PGSQL_HOST}:${ICINGA2_IDO_PGSQL__PORT}" <<-EOF
+	\x
+	DO \$\$
+	BEGIN
+	SET client_min_messages to 'WARNING';
+	  CREATE ROLE ${ICINGA2_IDO_PGSQL_USER} WITH LOGIN PASSWORD '${ICINGA2_IDO_PGSQL_PASS}';
+	  EXCEPTION WHEN DUPLICATE_OBJECT THEN
+	  RAISE NOTICE 'not creating role ${ICINGA2_IDO_PGSQL_USER} -- it already exists';
+	END
+	\$\$;
+EOF
+	psql -q "postgresql://${PGSQL_ROOT_USER}:${PGSQL_ROOT_PASS}@${ICINGA2_IDO_PGSQL_HOST}" \
+	-tc "SELECT 1 FROM pg_database WHERE datname = '${ICINGA2_IDO_PGSQL_DATA}'" | grep 1 \
+	|| pgsql_conn "${ICINGA2_IDO_PGSQL_HOST}" \
+		"${ICINGA2_IDO_PGSQL_PORT}" \
+		"${PGSQL_ROOT_USER}" \
+		"${PGSQL_ROOT_PASS}" <<-EOF
+		SET client_min_messages to 'WARNING';
+		CREATE DATABASE ${ICINGA2_IDO_PGSQL_DATA} ENCODING UTF8 OWNER ${ICINGA2_IDO_PGSQL_USER};
+		GRANT ALL PRIVILEGES ON DATABASE ${ICINGA2_IDO_PGSQL_DATA} TO ${ICINGA2_IDO_PGSQL_USER};
+		GRANT USAGE ON SCHEMA public TO ${ICINGA2_IDO_PGSQL_USER};
+		GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO ${ICINGA2_IDO_PGSQL_USER};
+		GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO ${ICINGA2_IDO_PGSQL_USER};
+EOF
+fi
+
+if evaluate_boolean "${ICINGA2_SATELLITE}"; then
+	echo "Icinga2: Satellite detected. Not connecting database"
+else
+	# Test credentials
+	echo "Icinga2: Verify database credentials"
+	pgsql_cred "${ICINGA2_IDO_PGSQL_HOST}" \
+		"${ICINGA2_IDO_PGSQL_PORT}" \
+		"${ICINGA2_IDO_PGSQL_USER}" \
+		"${ICINGA2_IDO_PGSQL_PASS}" \
+		  "${ICINGA2_IDO_PGSQL_DATA}" >/dev/null 2>&1
+
+	echo "Icinga2: Importing database schema"
+	# Import schema
+	pgsql_conn "${ICINGA2_IDO_PGSQL_HOST}" \
+		"${ICINGA2_IDO_PGSQL_PORT}" \
+		"${ICINGA2_IDO_PGSQL_USER}" \
+		"${ICINGA2_IDO_PGSQL_PASS}" \
+		"${ICINGA2_IDO_PGSQL_DATA}" \
+		< /usr/share/icinga2-ido-pgsql/schema/pgsql.sql \
+		>> /tmp/pgsql-ido-schema.log \
+		2>&1 || true
+	# Configure IDO PgSQL connection
+	cat > /etc/icinga2/features-available/ido-pgsql.conf <<-END
+	/**
+	 * The db_ido_pgsql library implements IDO functionality
+	 * for PGSQL.
+	 */
+
+	library "db_ido_pgsql"
+
+	object IdoPgsqlConnection "ido-pgsql" {
+	  user     = "${ICINGA2_IDO_PGSQL_USER}"
+	  password = "${ICINGA2_IDO_PGSQL_PASS}"
+	  host     = "${ICINGA2_IDO_PGSQL_HOST}"
+	  port     =  ${ICINGA2_IDO_PGSQL_PORT}
+	  database = "${ICINGA2_IDO_PGSQL_DATA}"
+	  ssl_mode = "${ICINGA2_IDO_PGSQL_SSL_MODE}"
+	  ssl_key  = "${ICINGA2_IDO_PGSQL_SSL_KEY}"
+	  ssl_cert = "${ICINGA2_IDO_PGSQL_SSL_CERT}"
+	  ssl_ca   = "${ICINGA2_IDO_PGSQL_SSL_CA}"
+	}
+END
+
+fi
+
+if evaluate_boolean "${ICINGA2_API_TRANSPORT}"; then
+	echo "Icinga2: Create API transport endpoint"
+	cat > /etc/icinga2/conf.d/api-transport.conf <<-END
+	## File generated from ENV
+	object ApiUser "${ICINGA2_API_TRANSPORT_USER}" {
+	password = "${ICINGA2_API_TRANSPORT_PASS}"
+	permissions = [ "*" ]
+	}
+	END
+else
+	[ ! -f /etc/icinga2/conf.d/api-transport.conf ] \
+		|| rm /etc/icinga2/conf.d/api-transport.conf
+fi
+
+if [ -d /usr/local/icinga2/scripts/ ]; then
+	echo "Icinga2: Local scripts directory mountpoint detected."
+	chmod u+x /usr/local/icinga2/scripts/* >/dev/null 2>&1 || true
+	grep -q "ScriptLocalDir" /etc/icinga2/constants.conf || echo -e "\n/* Directory where local scripts are mounted. */\nconst ScriptLocalDir = \"/usr/local/icinga2/scripts\"" >> /etc/icinga2/constants.conf
+fi
+
+if [ -d /usr/local/nagios/plugins/ ]; then
+	echo "Icinga2: Local plugins directory mountpoint detected."
+	chmod u+x /usr/local/nagios/plugins/* >/dev/null 2>&1 || true
+	grep -q "PluginLocalDir" /etc/icinga2/constants.conf || echo -e "\n/* Directory where local plugins are mounted. */\nconst PluginLocalDir = \"/usr/local/nagios/plugins\"" >> /etc/icinga2/constants.conf
+fi
+
+if evaluate_boolean "${ICINGA2_SATELLITE}"; then
+	echo "Icinga2: Running Icinga as satellite"
+	icinga2 feature enable api --log-level critical
+	icinga2 feature disable syslog mainlog --log-level critical
+else
+	echo "Icinga2: Running Icinga as master"
+	icinga2 feature enable ido-pgsql livestatus api --log-level critical
+	icinga2 feature disable syslog mainlog --log-level critical
+
+	# API certificate - regenerate private key and certificate when running in a new container
+	if [ ! -f "/var/lib/icinga2/certs/$(hostname).key" ]; then
+		icinga2 node setup --master --cn $(hostname) --log-level critical
+	fi
+fi
+
+echo -e "Icinga2: Finished configuration\n"
