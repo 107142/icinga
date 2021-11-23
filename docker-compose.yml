@@ -24,7 +24,6 @@ services:
     hostname: pgsql
     container_name: pgsql
     restart: always
-    mem_swappiness: 0
     networks:
       icinet:
     environment:
@@ -35,7 +34,6 @@ services:
     container_name: icinga
     restart: always
     hostname: 'icinga'
-    mem_swappiness: 0
     networks:
       icinet:
     ports:
