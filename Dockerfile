@@ -83,6 +83,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 		libconfig-inifiles-perl \
 		libnumber-format-perl \
 		libdatetime-perl \
+		libldap-common \
 		fping \
 		squidclient \
 		rsyslog \
