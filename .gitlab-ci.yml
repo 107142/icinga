@@ -10,7 +10,7 @@ before_script:
 build-stable:
   stage: build
   script:
-    - /kaniko/executor --cache=true --cache-copy-layers --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --build-arg NAME=$CI_PROJECT_NAME --build-arg BUILD_DATE=`date -u +"%d-%m-%Y-T%H:%M:%S%Z"` --build-arg VCS_REF=$CI_COMMIT_SHORT_SHA --build-arg VCS_URL=$CI_PROJECT_URL --destination $CI_REGISTRY_IMAGE:stable --destination $CI_REGISTRY_IMAGE:2 --destination $CI_REGISTRY_IMAGE:2.13 --destination $CI_REGISTRY_IMAGE:2.13.1
+    - /kaniko/executor --cache=true --cache-copy-layers --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --build-arg NAME=$CI_PROJECT_NAME --build-arg BUILD_DATE=`date -u +"%d-%m-%Y-T%H:%M:%S%Z"` --build-arg VCS_REF=$CI_COMMIT_SHORT_SHA --build-arg VCS_URL=$CI_PROJECT_URL --destination $CI_REGISTRY_IMAGE:stable --destination $CI_REGISTRY_IMAGE:2 --destination $CI_REGISTRY_IMAGE:2.13 --destination $CI_REGISTRY_IMAGE:2.13.2
   only:
     - stable
 
