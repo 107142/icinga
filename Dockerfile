@@ -6,7 +6,7 @@ RUN printf "Running on ${BUILDPLATFORM:-linux/amd64}, building for ${TARGETPLATF
 # Basic info
 ARG NAME
 ARG BUILD_DATE
-ARG VERSION=2.13.1
+ARG VERSION=2.13.2
 ARG VCS_REF
 ARG VCS_URL
 
@@ -22,6 +22,7 @@ LABEL maintainer="Marek Jaroš <jaros@ics.muni.cz>" \
 	org.label-schema.schema-version="1.0"
 
 ENV CODENAME=bullseye
+ENV PACKAGE=2.13.2-1.${CODENAME}
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en
 
 # Prepare environment
@@ -83,6 +84,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 		libconfig-inifiles-perl \
 		libnumber-format-perl \
 		libdatetime-perl \
+		libldap-common \
 		fping \
 		squidclient \
 		rsyslog \
@@ -98,14 +100,14 @@ COPY content/ /
 RUN export DEBIAN_FRONTEND=noninteractive \
 	&& curl -s https://packages.icinga.com/icinga.key | gpg --dearmor > /usr/share/keyrings/icinga-keyring.gpg \
 	&& curl -s https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor > /usr/share/keyrings/postgres-keyring.gpg \
-	&& echo "deb [signed-by=/usr/share/keyrings/icinga-keyring.gpg] https://packages.icinga.com/debian icinga-$CODENAME main" > /etc/apt/sources.list.d/icinga2.list \
-	&& echo "deb [signed-by=/usr/share/keyrings/postgres-keyring.gpg] https://apt.postgresql.org/pub/repos/apt/ $CODENAME-pgdg main" > /etc/apt/sources.list.d/$CODENAME-pgdg.list \
+	&& echo "deb [signed-by=/usr/share/keyrings/icinga-keyring.gpg] https://packages.icinga.com/debian icinga-${CODENAME} main" > /etc/apt/sources.list.d/icinga2.list \
+	&& echo "deb [signed-by=/usr/share/keyrings/postgres-keyring.gpg] https://apt.postgresql.org/pub/repos/apt/ ${CODENAME}-pgdg main" > /etc/apt/sources.list.d/${CODENAME}-pgdg.list \
 	&& apt-get update \
 	&& apt-get install -y -f --no-install-recommends -o DPkg::options::="--force-unsafe-io" \
-		icinga2 \
-		icinga2-bin \
-		icinga2-common \
-		icinga2-ido-pgsql \
+		icinga2=${PACKAGE} \
+		icinga2-bin=${PACKAGE} \
+		icinga2-common=${PACKAGE} \
+		icinga2-ido-pgsql=${PACKAGE} \
 		postgresql-client-13 \
 		monitoring-plugins \
 		monitoring-plugins-contrib \
