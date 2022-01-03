@@ -16,7 +16,6 @@ networks:
       driver: default
       config:
       - subnet: fd00:dead:beef::/48
-        gateway: fd00:dead:beef::1
 
 services:
   pgsql:
