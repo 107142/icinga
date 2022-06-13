@@ -6,7 +6,7 @@ RUN printf "Running on ${BUILDPLATFORM:-linux/amd64}, building for ${TARGETPLATF
 # Basic info
 ARG NAME
 ARG BUILD_DATE
-ARG VERSION=2.13.2
+ARG VERSION=2.13.3
 ARG VCS_REF
 ARG VCS_URL
 
