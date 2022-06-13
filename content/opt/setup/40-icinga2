@@ -11,6 +11,7 @@ ICINGA2_IDO_PGSQL_SSL_MODE=${ICINGA2_IDO_PGSQL_SSL_MODE:-disable}
 ICINGA2_IDO_PGSQL_SSL_KEY=${ICINGA2_IDO_PGSQL_SSL_KEY}
 ICINGA2_IDO_PGSQL_SSL_CERT=${ICINGA2_IDO_PGSQL_SSL_CERT}
 ICINGA2_IDO_PGSQL_SSL_CA=${ICINGA2_IDO_PGSQL_SSL_CA:-/etc/ssl/certs/ca-certificates.crt}
+ICINGA2_IDO_PGSQL_DATA_RETENTION=${ICINGA2_IDO_PGSQL_DATA_RETENTION:-730d}
 
 echo "Icinga2: Checking if database is available ..."
 pgsql_wait \
@@ -113,6 +114,24 @@ else
 	  ssl_key  = "${ICINGA2_IDO_PGSQL_SSL_KEY}"
 	  ssl_cert = "${ICINGA2_IDO_PGSQL_SSL_CERT}"
 	  ssl_ca   = "${ICINGA2_IDO_PGSQL_SSL_CA}"
+
+	  cleanup = {
+	    acknowledgements_age = ${ICINGA2_IDO_PGSQL_DATA_RETENTION}
+	    commenthistory_age = ${ICINGA2_IDO_PGSQL_DATA_RETENTION}
+	    contactnotifications_age = ${ICINGA2_IDO_PGSQL_DATA_RETENTION}
+	    contactnotificationmethods_age = ${ICINGA2_IDO_PGSQL_DATA_RETENTION}
+	    downtimehistory_age = ${ICINGA2_IDO_PGSQL_DATA_RETENTION}
+	    eventhandlers_age = ${ICINGA2_IDO_PGSQL_DATA_RETENTION}
+	    externalcommands_age = ${ICINGA2_IDO_PGSQL_DATA_RETENTION}
+	    flappinghistory_age = ${ICINGA2_IDO_PGSQL_DATA_RETENTION}
+	    hostchecks_age = ${ICINGA2_IDO_PGSQL_DATA_RETENTION}
+	    logentries_age = ${ICINGA2_IDO_PGSQL_DATA_RETENTION}
+	    notifications_age = ${ICINGA2_IDO_PGSQL_DATA_RETENTION}
+	    processevents_age = ${ICINGA2_IDO_PGSQL_DATA_RETENTION}
+	    statehistory_age = ${ICINGA2_IDO_PGSQL_DATA_RETENTION}
+	    servicechecks_age = ${ICINGA2_IDO_PGSQL_DATA_RETENTION}
+	    systemcommands_age = ${ICINGA2_IDO_PGSQL_DATA_RETENTION}
+	  }
 	}
 END
 

@@ -262,6 +262,7 @@ Vypsat logy lze v defaultní konfiguraci například příkazem `docker logs ici
 | `ICINGA2_IDO_PGSQL_SSL_KEY` | *nenastaveno* | TLS privátní klíč |
 | `ICINGA2_IDO_PGSQL_SSL_CERT` | *nenastaveno* | TLS veřejný certifikát |
 | `ICINGA2_IDO_PGSQL_SSL_CA` | `/etc/ssl/certs/ca-certificates.crt` | Certifikační authorita |
+| `ICINGA2_IDO_PGSQL_DATA_RETENTION` | `730d` | [Cleanup](https://icinga.com/docs/icinga-2/latest/doc/14-features/#db-ido-cleanup) older data |
 | `ICINGA2_FEATURE_GRAPHITE` | false | Nastav na `true` nebo `1` pro zapnutí graphite zapisovače |
 | `ICINGA2_FEATURE_GRAPHITE_HOST` | graphite | doménové jméno nebo IP adresa serveru kde běží Carbon/Graphite daemon |
 | `ICINGA2_FEATURE_GRAPHITE_PORT` | 2003 | Carbon port pro Graphite |

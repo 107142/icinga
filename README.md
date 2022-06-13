@@ -263,6 +263,7 @@ By default you can show logs with dommand `docker logs icinga`.
 | `ICINGA2_IDO_PGSQL_SSL_KEY` | *unset* | TLS private key |
 | `ICINGA2_IDO_PGSQL_SSL_CERT` | *unset* | TLS public key |
 | `ICINGA2_IDO_PGSQL_SSL_CA` | `/etc/ssl/certs/ca-certificates.crt` | Certificate authority |
+| `ICINGA2_IDO_PGSQL_DATA_RETENTION` | `730d` | [Cleanup](https://icinga.com/docs/icinga-2/latest/doc/14-features/#db-ido-cleanup) older data |
 | `ICINGA2_FEATURE_GRAPHITE` | false | Enable Graphite writer |
 | `ICINGA2_FEATURE_GRAPHITE_HOST` | graphite | Graphite port |
 | `ICINGA2_FEATURE_GRAPHITE_PORT` | 2003 | Graphite port |
