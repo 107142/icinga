@@ -61,6 +61,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 		libnl-genl-3-200 \
 		bc \
 		xxd \
+		eapoltest \
 		libdbus-1-dev \
 		libdbus-1-3 \
 		libradcli4 \
@@ -86,12 +87,14 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 		libnumber-format-perl \
 		libdatetime-perl \
 		libfile-slurp-perl \
+		liblocale-gettext-perl \
 		libldap-common \
 		fping \
 		squidclient \
 		rsyslog \
 		dcmtk \
 		smbclient \
+		check-postgres \
 	# Locale
 	&& sed -i -E 's/^#?\ ?en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
 	&& dpkg-reconfigure locales
@@ -137,6 +140,14 @@ RUN git clone https://github.com/lausser/check_nwc_health.git \
 	# check_mem
 	&& wget -q --no-cookies -O /usr/lib/nagios/plugins/check_mem.pl "https://raw.githubusercontent.com/justintime/nagios-plugins/master/check_mem/check_mem.pl" \
 	&& chmod +x /usr/lib/nagios/plugins/check_mem.pl \
+	# check_apache_status
+	&& wget -q --no-cookies -O /usr/lib/nagios/plugins/check_apache_status.pl "https://raw.githubusercontent.com/lbetz/check_apache_status/v1.4.2/check_apache_status.pl" \
+	&& chmod +x /usr/lib/nagios/plugins/check_apache_status.pl \
+	# check_nginx_status
+	&& wget -q --no-cookies -O /usr/lib/nagios/plugins/check_nginx_status.pl "https://raw.githubusercontent.com/regilero/check_nginx_status/master/check_nginx_status.pl" \
+	&& chmod +x /usr/lib/nagios/plugins/check_nginx_status.pl \
+	# check_postgres
+	&& ln -s /usr/bin/check_postgres /usr/lib/nagios/plugins/check_postgres.pl \
 	# Configuration touch-up
 	&& sed -i 's/vars\.os.*/vars.os = "Docker"/' "/etc/icinga2/conf.d/hosts.conf" \
 	&& mv /etc/icinga2 /etc/icinga2.dist \
