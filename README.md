@@ -18,6 +18,7 @@ Docker image: [registry.gitlab.ics.muni.cz:443/monitoring/icinga:stable](registr
 2.  Key features:
     *  icinga2
     *  influxdb-writer
+    *  influxdb2-writer
     *  graphite-writer
     *  msmtp
     *  Supervisor
@@ -212,14 +213,23 @@ Should the value for `PGSQL_ROOT_PASS` be left unset database and table creation
 
 # InfluxDB
 
-InfluxDB is not part of the container. To use it you need to have the database running and [configured](https://icinga.com/docs/icinga2/latest/doc/14-features/#influxdb). Configuration via environment variables (default values in parenthesis):
+InfluxDB is not part of the container. To use it you need to have the database running and [configured](https://icinga.com/docs/icinga-2/latest/doc/14-features/#influxdb-writer). Inlfux v1 and v2 are supported. Configuration via environment variables (default values in parenthesis):
 
+## V1
  * `ICINGA2_FEATURE_INFLUXDB`: enable InfluxDB writer (`false`)
  * `ICINGA2_FEATURE_INFLUXDB_HOST`: database host (`influxdb`)
  * `ICINGA2_FEATURE_INFLUXDB_PORT`: database port (`8086`)
  * `ICINGA2_FEATURE_INFLUXDB_DB`: database name (`icinga2_db`)
  * `ICINGA2_FEATURE_INFLUXDB_USER`: database user (`icinga2`)
  * `ICINGA2_FEATURE_INFLUXDB_PASS`: database password (*unset*)
+ * `ICINGA2_FEATURE_INFLUXDB_SSL`: TLS (`true`)
+## V2
+ * `ICINGA2_FEATURE_INFLUXDB2`: enable InfluxDB2 writer (`false`)
+ * `ICINGA2_FEATURE_INFLUXDB2_HOST`: database host (`influxdb`)
+ * `ICINGA2_FEATURE_INFLUXDB2_PORT`: database port (`8086`)
+ * `ICINGA2_FEATURE_INFLUXDB2_ORG`: organization (`monitoring`)
+ * `ICINGA2_FEATURE_INFLUXDB2_BUCKET`: database user (`icinga2`)
+ * `ICINGA2_FEATURE_INFLUXDB2_TOKEN`: authentication token (*unset*)
  * `ICINGA2_FEATURE_INFLUXDB_SSL`: TLS (`true`)
 
 
@@ -253,6 +263,7 @@ By default you can show logs with dommand `docker logs icinga`.
 | `ICINGA2_IDO_PGSQL_SSL_KEY` | *unset* | TLS private key |
 | `ICINGA2_IDO_PGSQL_SSL_CERT` | *unset* | TLS public key |
 | `ICINGA2_IDO_PGSQL_SSL_CA` | `/etc/ssl/certs/ca-certificates.crt` | Certificate authority |
+| `ICINGA2_IDO_PGSQL_DATA_RETENTION` | `730d` | [Cleanup](https://icinga.com/docs/icinga-2/latest/doc/14-features/#db-ido-cleanup) older data |
 | `ICINGA2_FEATURE_GRAPHITE` | false | Enable Graphite writer |
 | `ICINGA2_FEATURE_GRAPHITE_HOST` | graphite | Graphite port |
 | `ICINGA2_FEATURE_GRAPHITE_PORT` | 2003 | Graphite port |
@@ -265,6 +276,13 @@ By default you can show logs with dommand `docker logs icinga`.
 | `ICINGA2_FEATURE_INFLUXDB_USER` | icinga2 | InfluxDB user |
 | `ICINGA2_FEATURE_INFLUXDB_PASS` | *unset* | InfluxDB user password |
 | `ICINGA2_FEATURE_INFLUXDB_SSL` | true | TLS |
+| `ICINGA2_FEATURE_INFLUXDB2` | false | enable InfluxDB writer |
+| `ICINGA2_FEATURE_INFLUXDB2_HOST` | influxdb | InfluxDB host |
+| `ICINGA2_FEATURE_INFLUXDB2_PORT` | 8086 | InfluxDB port |
+| `ICINGA2_FEATURE_INFLUXDB2_ORG` | monitoring | InfluxDB organization name |
+| `ICINGA2_FEATURE_INFLUXDB2_BUCKET` | icinga2 | InfluxDB bucket name |
+| `ICINGA2_FEATURE_INFLUXDB2_TOKEN` | *unset* | InfluxDB authentication token |
+| `ICINGA2_FEATURE_INFLUXDB2_SSL` | true | TLS |
 | `ICINGA2_API_TRANSPORT` | True | enable Icinga API transport |
 | `ICINGA2_API_TRANSPORT_USER` | icinga2-transport | API transport user |
 | `ICINGA2_API_TRANSPORT_PASS` | icingatransport | API transport user password |

@@ -1,0 +1,51 @@
+#!/bin/bash
+
+. /opt/helpers
+
+ICINGA2_FEATURE_INFLUXDB2=${ICINGA2_FEATURE_INFLUXDB2:-False}
+
+# InfluxDB2 writer
+if evaluate_boolean "${ICINGA2_FEATURE_INFLUXDB2}"; then
+	ICINGA2_FEATURE_INFLUXDB2_HOST=${ICINGA2_FEATURE_INFLUXDB2_HOST:-}
+	ICINGA2_FEATURE_INFLUXDB2_PORT=${ICINGA2_FEATURE_INFLUXDB2_PORT:-8086}
+	ICINGA2_FEATURE_INFLUXDB2_ORG=${ICINGA2_FEATURE_INFLUXDB2_ORG:-monitoring}
+	ICINGA2_FEATURE_INFLUXDB2_BUCKET=${ICINGA2_FEATURE_INFLUXDB2_BUCKET:-icinga2}
+	ICINGA2_FEATURE_INFLUXDB2_TOKEN=${ICINGA2_FEATURE_INFLUXDB2_TOKEN}
+	ICINGA2_FEATURE_INFLUXDB2_SSL=${ICINGA2_FEATURE_INFLUXDB2_SSL:-true}
+
+	echo "InfluxDB2: Enabling Icinga2 InfluxDB2 writer"
+
+	icinga2 feature enable influxdb2 --log-level critical
+
+	cat >/etc/icinga2/features-available/influxdb2.conf <<-END
+	object Influxdb2Writer "influxdb" {
+	  host = "${ICINGA2_FEATURE_INFLUXDB2_HOST}"
+	  port = ${ICINGA2_FEATURE_INFLUXDB2_PORT}
+	  organization = "${ICINGA2_FEATURE_INFLUXDB2_ORG}"
+	  bucket = "${ICINGA2_FEATURE_INFLUXDB2_BUCKET}"
+	  auth_token = "${ICINGA2_FEATURE_INFLUXDB2_TOKEN}"
+	  ssl_enable = ${ICINGA2_FEATURE_INFLUXDB2_SSL}
+	  enable_send_thresholds = true
+	  enable_send_metadata = true
+	  flush_threshold = 1024
+	  flush_interval = 10s
+	  host_template = {
+	    measurement = "\$host.check_command$"
+	    tags = {
+	      hostname = "\$host.name$"
+	    }
+	  }
+	  service_template = {
+	    measurement = "\$service.check_command$"
+	    tags = {
+	      hostname = "\$host.name$"
+	      service = "\$service.name$"
+	    }
+	  }
+	}
+	END
+	echo -e "InfluxDB2: Writer enabled and sending data to Influx agent at: ${ICINGA2_FEATURE_INFLUXDB2_HOST:-}:${ICINGA2_FEATURE_INFLUXDB2_PORT}\n"
+else
+	# Actively disable influxdb, to not hit any weird bugs
+	icinga2 feature disable influxdb2 --log-level critical || true
+fi

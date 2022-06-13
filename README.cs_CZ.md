@@ -18,6 +18,7 @@ Docker image: [registry.gitlab.ics.muni.cz:443/monitoring/icinga:stable](registr
 2.  Klíčové vlastnosti:
     *  icinga2
     *  influxdb-writer
+    *  influxdb2-writer
     *  graphite-writer
     *  msmtp
     *  Supervisor
@@ -211,8 +212,9 @@ Pokud nebude hodnota proměnné `PGSQL_ROOT_PASS` nastavena vytváření databá
 
 # InfluxDB
 
-InfluxDB není součástí kontejneru. Pro její použití je nutné mít databázi již spuštěnou a [nakonfigurovanou](https://icinga.com/docs/icinga2/latest/doc/14-features/#influxdb-writer). Konfigurace připojení probíha pomocí proměnných (výchozí hodnoty v závorce):
+InfluxDB není součástí kontejneru. Pro její použití je nutné mít databázi již spuštěnou a [nakonfigurovanou](https://icinga.com/docs/icinga-2/latest/doc/14-features/#influxdb-writer). Influx v1 a v2 jsou podporovány. Konfigurace připojení probíhá pomocí proměnných (výchozí hodnoty v závorce):
 
+## V1
  * `ICINGA2_FEATURE_INFLUXDB`: povolí zapnutí InfluxDB modulu (`false`)
  * `ICINGA2_FEATURE_INFLUXDB_HOST`: adresa hosta kde beží databáze (`influxdb`)
  * `ICINGA2_FEATURE_INFLUXDB_PORT`: port serveru (`8086`)
@@ -220,6 +222,14 @@ InfluxDB není součástí kontejneru. Pro její použití je nutné mít datab�
  * `ICINGA2_FEATURE_INFLUXDB_USER`: uživatel pro Influx databázi (`icinga2`)
  * `ICINGA2_FEATURE_INFLUXDB_PASS`: heslo pro InfluxDB (*nenastaveno*)
  * `ICINGA2_FEATURE_INFLUXDB_SSL`: použití TLS pro připojení (`true`)
+## V2
+ * `ICINGA2_FEATURE_INFLUXDB2`: povolí zapnutí InfluxDB2 modulu (`false`)
+ * `ICINGA2_FEATURE_INFLUXDB2_HOST`: adresa hosta kde beží databáze (`influxdb`)
+ * `ICINGA2_FEATURE_INFLUXDB2_PORT`: port serveru (`8086`)
+ * `ICINGA2_FEATURE_INFLUXDB2_ORG`: organizace (`monitoring`)
+ * `ICINGA2_FEATURE_INFLUXDB2_BUCKET`: název vědra (`monitoring`)
+ * `ICINGA2_FEATURE_INFLUXDB2_PASS`: autentizační znak (*nenastaveno*)
+ * `ICINGA2_FEATURE_INFLUXDB2_SSL`: použití TLS pro připojení (`true`)
 
 
 # Logování
@@ -252,6 +262,7 @@ Vypsat logy lze v defaultní konfiguraci například příkazem `docker logs ici
 | `ICINGA2_IDO_PGSQL_SSL_KEY` | *nenastaveno* | TLS privátní klíč |
 | `ICINGA2_IDO_PGSQL_SSL_CERT` | *nenastaveno* | TLS veřejný certifikát |
 | `ICINGA2_IDO_PGSQL_SSL_CA` | `/etc/ssl/certs/ca-certificates.crt` | Certifikační authorita |
+| `ICINGA2_IDO_PGSQL_DATA_RETENTION` | `730d` | [Cleanup](https://icinga.com/docs/icinga-2/latest/doc/14-features/#db-ido-cleanup) older data |
 | `ICINGA2_FEATURE_GRAPHITE` | false | Nastav na `true` nebo `1` pro zapnutí graphite zapisovače |
 | `ICINGA2_FEATURE_GRAPHITE_HOST` | graphite | doménové jméno nebo IP adresa serveru kde běží Carbon/Graphite daemon |
 | `ICINGA2_FEATURE_GRAPHITE_PORT` | 2003 | Carbon port pro Graphite |
@@ -264,6 +275,13 @@ Vypsat logy lze v defaultní konfiguraci například příkazem `docker logs ici
 | `ICINGA2_FEATURE_INFLUXDB_USER` | icinga2 | Uživatel pro Influx databázi |
 | `ICINGA2_FEATURE_INFLUXDB_PASS` | *nenastaveno* | Heslo pro InfluxDB |
 | `ICINGA2_FEATURE_INFLUXDB_SSL` | true | Použití TLS pro připojení |
+| `ICINGA2_FEATURE_INFLUXDB2` | false | Povolí zapnutí InfluxDB modulu |
+| `ICINGA2_FEATURE_INFLUXDB2_HOST` | influxdb | Adresa hosta kde beží databáze |
+| `ICINGA2_FEATURE_INFLUXDB2_PORT` | 8086 | Port serveru |
+| `ICINGA2_FEATURE_INFLUXDB2_ORG` | monitoring | Databáze |
+| `ICINGA2_FEATURE_INFLUXDB2_BUCKET` | icinga2 | název vědra |
+| `ICINGA2_FEATURE_INFLUXDB2_TOKEN` | *nenastaveno* | autentizační znak |
+| `ICINGA2_FEATURE_INFLUXDB2_SSL` | true | Použití TLS pro připojení |
 | `ICINGA2_API_TRANSPORT` | True | Vytvoření API endpointu |
 | `ICINGA2_API_TRANSPORT_USER` | icinga2-transport | API užiatel pro Icingaweb transport |
 | `ICINGA2_API_TRANSPORT_PASS` | icingatransport | Heslo API uživatele pro Icingaweb transport |
