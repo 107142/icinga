@@ -81,9 +81,11 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 		python3-urllib3 \
 		libwww-perl \
 		libjson-perl \
+		libjson-xs-perl \
 		libconfig-inifiles-perl \
 		libnumber-format-perl \
 		libdatetime-perl \
+		libfile-slurp-perl \
 		libldap-common \
 		fping \
 		squidclient \
