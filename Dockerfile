@@ -6,7 +6,7 @@ RUN printf "Running on ${BUILDPLATFORM:-linux/amd64}, building for ${TARGETPLATF
 # Basic info
 ARG NAME
 ARG BUILD_DATE
-ARG VERSION=2.13.3
+ARG VERSION=2.13.4
 ARG VCS_REF
 ARG VCS_URL
 
@@ -22,7 +22,7 @@ LABEL maintainer="Marek Jaroš <jaros@ics.muni.cz>" \
 	org.label-schema.schema-version="1.0"
 
 ENV CODENAME=bullseye
-ENV PACKAGE=2.13.3-1.${CODENAME}
+ENV PACKAGE=2.13.4-1.${CODENAME}
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en
 
 # Prepare environment
