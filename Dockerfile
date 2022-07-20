@@ -22,7 +22,7 @@ LABEL maintainer="Marek Jaroš <jaros@ics.muni.cz>" \
 	org.label-schema.schema-version="1.0"
 
 ENV CODENAME=bullseye
-ENV PACKAGE=2.13.3-1.${CODENAME}
+ENV PACKAGE=2.13.4-1.${CODENAME}
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en
 
 # Prepare environment
